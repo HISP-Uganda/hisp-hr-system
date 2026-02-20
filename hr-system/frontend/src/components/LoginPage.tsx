@@ -19,7 +19,7 @@ export function LoginPage() {
 
     try {
       await auth.login(username, password);
-      await navigate({ to: "/" });
+      await navigate({ to: "/dashboard" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);

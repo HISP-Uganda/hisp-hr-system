@@ -2,7 +2,7 @@
 ## Development Status Tracker
 ## Phase A – Online-First (JWT + SQLX + golang-migrate)
 
-Last Updated: 2026-02-20 13:58:00 UTC
+Last Updated: 2026-02-20 14:22:00 UTC
 
 ---
 
@@ -16,6 +16,7 @@ Implemented and working:
 - Employees module (backend CRUD/search + frontend list/dialog workflows).
 - Leave module (backend business rules + frontend planner/apply/requests/balance flows).
 - Payroll module (batch lifecycle, transactional generation, draft edits, approval/lock, CSV export).
+- Router hardening fixes for dashboard/default redirects/not-found/access-denied flows.
 
 Not implemented yet:
 - Departments module (Phase 6)
@@ -149,6 +150,14 @@ Not implemented yet:
 - Frontend:
   - `frontend/src/modules/users/UsersPage.tsx`
   - Search + pagination + create/edit/reset-password/status dialogs
+
+## Routing fixes (TanStack Router)
+- Updated `frontend/src/routes/router.tsx` to ensure:
+  - Real `/dashboard` route resolves and renders under authenticated shell.
+  - `/` redirects to `/dashboard` when authenticated, otherwise `/login`.
+  - Friendly not-found screen configured at root route (`notFoundComponent`).
+  - Role-denied checks redirect to `/access-denied` page instead of falling through to not-found.
+- Login success navigation explicitly targets `/dashboard` (`frontend/src/components/LoginPage.tsx`).
 
 ---
 

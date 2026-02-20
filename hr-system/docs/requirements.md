@@ -944,6 +944,53 @@ Pages:
 - Users (Admin only)
 - (Optional) Audit Logs (Admin only)
 
+## 7.3 Routing Requirements (TanStack Router)
+
+The app must define a complete route map with an explicit default landing page after login.
+
+### 7.3.1 Post-login Navigation
+- After successful login, the app MUST navigate to `/dashboard`.
+- If the user is already authenticated and visits `/login`, they MUST be redirected to `/dashboard`.
+
+### 7.3.2 Default Route
+- The root route `/` MUST redirect to `/dashboard` when authenticated.
+- If unauthenticated, `/` MUST redirect to `/login`.
+
+### 7.3.3 Not Found Handling
+- The TanStack Router MUST be configured with a router-level `defaultNotFoundComponent`
+  OR the root route MUST define a `notFoundComponent`.
+- The Not Found screen MUST:
+  - display a clear message (“Page not found”)
+  - provide a button/link back to `/dashboard` (if authenticated) or `/login` (if unauthenticated)
+
+### 7.3.4 Protected Routes
+- All routes under the authenticated shell MUST be protected.
+- Unauthorized navigation must redirect to `/login`.
+- Role-restricted routes (e.g. `/users`) must show an “Access denied” page (not Not Found).
+
+---
+
+## 7.4 Dashboard (MVP)
+
+The dashboard is the first screen after login (`/dashboard`) and MUST render without errors.
+
+### 7.4.1 Content (MVP)
+- Display a welcome header with:
+  - logged-in username
+  - role
+- Display a simple “Quick links” / tiles section that navigates to:
+  - Employees
+  - Leave
+  - Payroll (role restricted)
+  - Users (Admin only)
+
+### 7.4.2 Data (MVP)
+- The dashboard may use static content for MVP.
+- If any data is shown, it MUST degrade gracefully:
+  - loading state
+  - empty state
+  - error state (no blank screens)
+
 ---
 
 # 8. Project Structure (Target)

@@ -24,11 +24,12 @@ function requireAuth(context: RouterContext) {
 function requireRole(context: RouterContext, allowedRoles: UserRole[]) {
   requireAuth(context);
   if (!hasRole(context.auth, allowedRoles)) {
-    throw redirect({ to: "/dashboard" });
+    throw redirect({ to: "/access-denied" });
   }
 }
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({
+  notFoundComponent: () => <SectionPage title="Not Found" description="The requested page was not found." />,
   component: () => <Outlet />,
 });
 
@@ -57,48 +58,64 @@ const shellRoute = createRoute({
 
 const dashboardRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "dashboard",
-  component: () => <SectionPage title="Dashboard" description="Overview and high-level HR metrics will be displayed here." />,
+  path: "/dashboard",
+  component: AppShell,
+  // component: () => <SectionPage title="Dashboard" description="Overview and high-level HR metrics will be displayed here." />,
+});
+
+const dashboardTypoRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/dashboad",
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard" });
+  },
+  component: () => null,
+});
+
+const accessDeniedRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "/access-denied",
+  component: () => <SectionPage title="Access Denied" description="You do not have permission to view this page." />,
 });
 
 const employeesRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "employees",
+  path: "/employees",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "HR Officer"]),
   component: EmployeesPage,
 });
 
 const departmentsRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "departments",
+  path: "/departments",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "HR Officer"]),
   component: () => <SectionPage title="Departments" description="Department management UI will be implemented in Phase 6." />,
 });
 
 const leaveRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "leave",
+  path: "/leave",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "HR Officer", "Finance Officer", "Viewer"]),
   component: LeavePage,
 });
 
 const payrollRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "payroll",
+  path: "/payroll",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "Finance Officer"]),
   component: PayrollBatchesPage,
 });
 
 const payrollDetailRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "payroll/$batchId",
+  path: "/payroll/$batchId",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "Finance Officer"]),
   component: PayrollBatchDetailPage,
 });
 
 const usersRoute = createRoute({
   getParentRoute: () => shellRoute,
-  path: "users",
+  path: "/users",
   beforeLoad: ({ context }) => requireRole(context, ["Admin"]),
   component: UsersPage,
 });
@@ -107,6 +124,8 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   shellRoute.addChildren([
     dashboardRoute,
+    dashboardTypoRoute,
+    accessDeniedRoute,
     employeesRoute,
     departmentsRoute,
     leaveRoute,
