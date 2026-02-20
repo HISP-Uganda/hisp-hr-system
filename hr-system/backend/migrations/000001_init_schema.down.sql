@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS payroll_entries;
+DROP TABLE IF EXISTS payroll_batches;
+DROP TABLE IF EXISTS leave_requests;
+DROP TABLE IF EXISTS leave_types;
+DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS departments;
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS users;

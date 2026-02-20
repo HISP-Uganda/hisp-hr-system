@@ -1,0 +1,314 @@
+# HISP HR System
+## Codex CLI Master Prompt File
+## Phase A – Online-First
+## Stack: Wails v2 + Go 1.22+ + SQLX + golang-migrate + JWT
+
+---
+
+# 1. FOUNDATION PHASE
+
+Goal: Establish project skeleton + DB + migrations.
+
+Prompt:
+
+Implement system foundation:
+
+- Ensure Wails project structure matches requirements.md
+- Implement config loader:
+    - DB connection string
+    - JWT secret
+    - Token expiry durations
+- Setup SQLX DB connection pool
+- Add golang-migrate integration
+- Create complete migration set for all tables:
+    users
+    refresh_tokens
+    departments
+    employees
+    leave_types
+    leave_requests
+    payroll_batches
+    payroll_entries
+    audit_logs
+- Ensure up/down migration files exist
+- Add migration runner for development startup
+
+Deliverables:
+- backend/internal/config
+- backend/internal/db
+- backend/migrations
+- Clean build
+- Update docs/status.md
+
+---
+
+# 2. AUTHENTICATION (JWT + REFRESH)
+
+Goal: Fully working JWT authentication.
+
+Implement:
+
+## Backend
+
+- users repository (SQLX)
+- bcrypt password hashing
+- Login function:
+    - Validate credentials
+    - Generate access token (short-lived)
+    - Generate refresh token
+    - Store hashed refresh token
+- Refresh token rotation:
+    - Validate old refresh token
+    - Invalidate old
+    - Issue new pair
+- Logout:
+    - Revoke refresh token
+- JWT middleware:
+    - Validate signature
+    - Extract claims
+    - Load user
+    - Verify is_active
+- RBAC middleware:
+    - Enforce role-based restrictions
+
+Access token must contain:
+- user_id
+- username
+- role
+- expiry
+
+Deliverables:
+- internal/auth
+- middleware/jwt.go
+- middleware/rbac.go
+- Update docs/status.md
+
+---
+
+# 3. LOGIN UI + AUTH STATE
+
+Goal: Fully functional login experience.
+
+Frontend:
+
+- Small centered login screen (MUI Card)
+- Username + Password fields
+- Error handling
+- Call login backend function
+- Store access token in memory
+- Handle refresh flow automatically
+- Implement logout
+- Prevent shell rendering before auth
+
+Add:
+- “Me” function to retrieve authenticated user
+
+Deliver:
+- Protected routes using TanStack Router
+- Update docs/status.md
+
+---
+
+# 4. MAIN SHELL
+
+Goal: Authenticated UI structure.
+
+Implement:
+
+- Sidebar navigation
+- Top bar:
+    - Username
+    - Role
+    - Logout button
+- Route-based access visibility
+- Hide unauthorized menu items
+- Protect all routes
+
+Deliver:
+- Clean shell layout
+- Update docs/status.md
+
+---
+
+# 5. EMPLOYEES MODULE
+
+Backend:
+
+- SQLX repository
+- Service layer
+- CRUD operations:
+    - CreateEmployee
+    - UpdateEmployee
+    - DeleteEmployee
+    - GetEmployee
+    - ListEmployees (with pagination + search)
+- Validate required fields
+- Ensure department_id integrity
+
+Frontend:
+
+- Employee list table
+- Search bar
+- Create/Edit dialog
+- Delete confirmation
+
+Deliver:
+- End-to-end employee management
+- Update docs/status.md
+
+---
+
+# 6. DEPARTMENTS MODULE
+
+Backend:
+
+- CRUD operations
+- Enforce rule:
+    - Cannot delete department with assigned employees
+
+Frontend:
+
+- Department list page
+- Create/Edit dialogs
+
+Deliver:
+- Department management working
+- Update docs/status.md
+
+---
+
+# 7. LEAVE MODULE
+
+Backend:
+
+- leave_types CRUD
+- leave_requests:
+    - ApplyLeave
+    - ApproveLeave
+    - RejectLeave
+- Compute days_requested server-side
+- Enforce:
+    - Calendar year entitlement
+    - Cannot exceed available balance
+- Add LeaveSummary query
+
+Frontend:
+
+- Leave Types page
+- Leave Requests page
+- Approval buttons (HR/Admin only)
+- Status chips (Pending/Approved/Rejected)
+
+Deliver:
+- Working leave workflow
+- Update docs/status.md
+
+---
+
+# 8. PAYROLL MODULE
+
+Backend:
+
+- CreateBatch(month, year)
+- GenerateEntries(batch_id):
+    - For each active employee
+    - Insert payroll entry
+    - Must use DB transaction
+- UpdateEntryAmounts (Draft only)
+- ApproveBatch
+- LockBatch
+- Enforce:
+    - No edits after lock
+- CSV export generator
+
+Frontend:
+
+- Batch list
+- Batch detail table
+- Edit allowances/deductions
+- Approve/Lock buttons
+- CSV export button
+
+Deliver:
+- Complete payroll lifecycle
+- Update docs/status.md
+
+---
+
+# 9. USER MANAGEMENT
+
+Backend:
+
+- CreateUser
+- ResetPassword
+- Activate/Deactivate
+- ListUsers
+
+Frontend:
+
+- Users page (Admin only)
+- Create dialog
+- Status toggle
+- Reset password dialog
+
+Deliver:
+- Admin user control
+- Update docs/status.md
+
+---
+
+# 10. AUDIT LOGGING
+
+Backend:
+
+- Helper to record audit events
+- Automatically log:
+    - Login success/failure
+    - Token refresh
+    - Leave approvals
+    - Payroll batch create/approve/lock
+    - Payroll entry update
+    - User changes
+
+Optional:
+- Admin audit log viewer page
+
+Deliver:
+- Audit fully integrated
+- Update docs/status.md
+
+---
+
+# 11. HARDENING PHASE
+
+Perform full system audit:
+
+- Ensure all SQL queries parameterized
+- Validate RBAC coverage
+- Validate refresh token revocation
+- Improve error handling
+- Improve logging clarity
+- Remove dead code
+- Ensure cross-platform builds
+- Add minimal service-layer tests
+
+Deliver:
+- Clean, production-ready state
+- Update docs/status.md
+
+---
+
+# LOW CONTEXT / SESSION RESET
+
+If context becomes low:
+
+1. Read docs/requirements.md
+2. Read docs/status.md
+3. Summarize current state
+4. Continue next milestone
+5. Avoid rewriting completed modules
+
+---
+
+# END
+
