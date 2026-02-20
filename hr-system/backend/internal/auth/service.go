@@ -57,6 +57,9 @@ func (s *Service) Login(ctx context.Context, username, password string) (AuthRes
 	if err := s.repo.CreateRefreshToken(ctx, user.ID, refreshHash, refreshExpiry); err != nil {
 		return AuthResult{}, err
 	}
+	if err := s.repo.UpdateLastLoginAt(ctx, user.ID, time.Now().UTC()); err != nil {
+		return AuthResult{}, err
+	}
 
 	return AuthResult{
 		AccessToken:  accessToken,

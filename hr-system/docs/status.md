@@ -2,7 +2,7 @@
 ## Development Status Tracker
 ## Phase A – Online-First (JWT + SQLX + golang-migrate)
 
-Last Updated: 2026-02-20 09:33:00 UTC
+Last Updated: 2026-02-20 13:58:00 UTC
 
 ---
 
@@ -19,11 +19,9 @@ Implemented and working:
 
 Not implemented yet:
 - Departments module (Phase 6)
-- User management module (Phase 9)
-- Audit logging module (Phase 10)
+- Audit logging module (Phase 10, broader event coverage)
 - Structured logging integration
 - TanStack Query integration
-- Seed/admin bootstrap workflow
 
 ---
 
@@ -127,6 +125,31 @@ Not implemented yet:
 - API mapping notes:
   - `docs/notes/payroll.md` records binding surface and business rules.
 
+## User Management module (complete)
+- Backend domain:
+  - `backend/internal/users/repository.go`
+  - `backend/internal/users/service.go`
+  - `backend/internal/users/service_test.go`
+- Wails/app wiring:
+  - `backend/bootstrap/users.go`
+  - `app_users.go`
+- Core rules implemented:
+  - Admin-only authorization for all user-management operations
+  - Create/List/Get/Update/ResetPassword/Activate-Deactivate workflows
+  - Password hashing using bcrypt
+  - Username uniqueness enforcement
+  - Self-deactivation guard for current admin
+  - Password hash excluded from all API responses
+  - Audit entries persisted for create/update/reset-password/activate/deactivate via `audit_logs`
+- Schema + auth updates:
+  - Migration `backend/migrations/000004_user_management.*.sql` adds `users.last_login_at` and username index
+  - Auth login flow updates `last_login_at`
+- Seed bootstrap:
+  - Initial admin seeding via env (`APP_INITIAL_ADMIN_USERNAME`, `APP_INITIAL_ADMIN_PASSWORD`, `APP_INITIAL_ADMIN_ROLE`) with idempotent insert-on-conflict
+- Frontend:
+  - `frontend/src/modules/users/UsersPage.tsx`
+  - Search + pagination + create/edit/reset-password/status dialogs
+
 ---
 
 # 3. Milestone Status
@@ -139,12 +162,12 @@ Completed:
 5. Phase 5 Employees module
 6. Phase 7 Leave module (out of sequence by explicit request)
 7. Phase 8 Payroll module (implemented ahead of Phase 6 by explicit request)
+8. Phase 9 User management
 
 Not started:
 1. Phase 6 Departments module
-2. Phase 9 User management
-3. Phase 10 Audit logging
-4. Phase 11 hardening
+2. Phase 10 Audit logging
+3. Phase 11 hardening
 
 ---
 

@@ -11,16 +11,19 @@ import (
 
 // Config captures backend runtime settings sourced from environment variables.
 type Config struct {
-	DatabaseURL     string
-	JWTSecret       string
-	AccessTokenTTL  time.Duration
-	RefreshTokenTTL time.Duration
-	RunMigrations   bool
-	MigrationsPath  string
-	DBMaxOpenConns  int
-	DBMaxIdleConns  int
-	DBConnMaxIdle   time.Duration
-	DBConnMaxLife   time.Duration
+	DatabaseURL          string
+	JWTSecret            string
+	AccessTokenTTL       time.Duration
+	RefreshTokenTTL      time.Duration
+	RunMigrations        bool
+	MigrationsPath       string
+	DBMaxOpenConns       int
+	DBMaxIdleConns       int
+	DBConnMaxIdle        time.Duration
+	DBConnMaxLife        time.Duration
+	InitialAdminUsername string
+	InitialAdminPassword string
+	InitialAdminRole     string
 }
 
 func Load() (Config, error) {
@@ -45,16 +48,19 @@ func Load() (Config, error) {
 	}
 
 	cfg := Config{
-		DatabaseURL:     os.Getenv("APP_DB_URL"),
-		JWTSecret:       os.Getenv("APP_JWT_SECRET"),
-		AccessTokenTTL:  accessTTL,
-		RefreshTokenTTL: refreshTTL,
-		RunMigrations:   parseBool("APP_RUN_MIGRATIONS", true),
-		MigrationsPath:  parseString("APP_MIGRATIONS_PATH", "backend/migrations"),
-		DBMaxOpenConns:  parseInt("APP_DB_MAX_OPEN_CONNS", 25),
-		DBMaxIdleConns:  parseInt("APP_DB_MAX_IDLE_CONNS", 25),
-		DBConnMaxIdle:   maxIdleTime,
-		DBConnMaxLife:   maxLifetime,
+		DatabaseURL:          os.Getenv("APP_DB_URL"),
+		JWTSecret:            os.Getenv("APP_JWT_SECRET"),
+		AccessTokenTTL:       accessTTL,
+		RefreshTokenTTL:      refreshTTL,
+		RunMigrations:        parseBool("APP_RUN_MIGRATIONS", true),
+		MigrationsPath:       parseString("APP_MIGRATIONS_PATH", "backend/migrations"),
+		DBMaxOpenConns:       parseInt("APP_DB_MAX_OPEN_CONNS", 25),
+		DBMaxIdleConns:       parseInt("APP_DB_MAX_IDLE_CONNS", 25),
+		DBConnMaxIdle:        maxIdleTime,
+		DBConnMaxLife:        maxLifetime,
+		InitialAdminUsername: parseString("APP_INITIAL_ADMIN_USERNAME", ""),
+		InitialAdminPassword: parseString("APP_INITIAL_ADMIN_PASSWORD", ""),
+		InitialAdminRole:     parseString("APP_INITIAL_ADMIN_ROLE", "admin"),
 	}
 
 	if cfg.DatabaseURL == "" {

@@ -20,7 +20,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 
 func (r *Repository) FindUserByUsername(ctx context.Context, username string) (User, error) {
 	const query = `
-		SELECT id, username, password_hash, role, is_active, created_at, updated_at
+		SELECT id, username, password_hash, role, is_active, created_at, updated_at, last_login_at
 		FROM users
 		WHERE username = $1
 	`
@@ -36,7 +36,7 @@ func (r *Repository) FindUserByUsername(ctx context.Context, username string) (U
 
 func (r *Repository) FindUserByID(ctx context.Context, userID int64) (User, error) {
 	const query = `
-		SELECT id, username, password_hash, role, is_active, created_at, updated_at
+		SELECT id, username, password_hash, role, is_active, created_at, updated_at, last_login_at
 		FROM users
 		WHERE id = $1
 	`
@@ -57,6 +57,18 @@ func (r *Repository) CreateRefreshToken(ctx context.Context, userID int64, token
 	`
 	if _, err := r.db.ExecContext(ctx, query, userID, tokenHash, expiresAt); err != nil {
 		return fmt.Errorf("create refresh token: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) UpdateLastLoginAt(ctx context.Context, userID int64, at time.Time) error {
+	const query = `
+		UPDATE users
+		SET last_login_at = $2, updated_at = NOW()
+		WHERE id = $1
+	`
+	if _, err := r.db.ExecContext(ctx, query, userID, at); err != nil {
+		return fmt.Errorf("update last login: %w", err)
 	}
 	return nil
 }
@@ -92,7 +104,8 @@ func (r *Repository) GetRefreshTokenAndUserForUpdate(
 			u.role,
 			u.is_active,
 			u.updated_at AS user_updated_at,
-			u.created_at AS user_created_at
+			u.created_at AS user_created_at,
+			u.last_login_at AS user_last_login_at
 		FROM refresh_tokens rt
 		JOIN users u ON u.id = rt.user_id
 		WHERE rt.token_hash = $1
@@ -114,6 +127,7 @@ func (r *Repository) GetRefreshTokenAndUserForUpdate(
 		IsActive      bool         `db:"is_active"`
 		UserCreatedAt time.Time    `db:"user_created_at"`
 		UserUpdatedAt time.Time    `db:"user_updated_at"`
+		UserLastLogin sql.NullTime `db:"user_last_login_at"`
 	}{}
 
 	if err := tx.GetContext(ctx, &row, query, tokenHash, now); err != nil {
@@ -139,6 +153,7 @@ func (r *Repository) GetRefreshTokenAndUserForUpdate(
 		IsActive:     row.IsActive,
 		CreatedAt:    row.UserCreatedAt,
 		UpdatedAt:    row.UserUpdatedAt,
+		LastLoginAt:  row.UserLastLogin,
 	}
 
 	return token, user, nil

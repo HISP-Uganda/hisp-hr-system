@@ -42,11 +42,12 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const allowedItems = useMemo(() => {
-    const role = auth.user?.role as UserRole | undefined;
+    const role = auth.user?.role;
     if (!role) {
       return [];
     }
-    return navItems.filter((item) => item.roles.includes(role));
+    const normalized = role.trim().toLowerCase();
+    return navItems.filter((item) => item.roles.some((allowedRole) => allowedRole.toLowerCase() === normalized));
   }, [auth.user?.role]);
 
   const onNavigate = async (to: NavItem["to"]) => {

@@ -8,6 +8,7 @@ import { EmployeesPage } from "../modules/employees/EmployeesPage";
 import { LeavePage } from "../modules/leave/LeavePage";
 import { PayrollBatchesPage } from "../modules/payroll/PayrollBatchesPage";
 import { PayrollBatchDetailPage } from "../modules/payroll/PayrollBatchDetailPage";
+import { UsersPage } from "../modules/users/UsersPage";
 import { UserRole, hasRole } from "./access";
 
 type RouterContext = {
@@ -99,7 +100,7 @@ const usersRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "users",
   beforeLoad: ({ context }) => requireRole(context, ["Admin"]),
-  component: () => <SectionPage title="Users" description="Admin user management UI will be implemented in Phase 9." />,
+  component: UsersPage,
 });
 
 const routeTree = rootRoute.addChildren([

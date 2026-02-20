@@ -16,6 +16,7 @@ type Runtime struct {
 	Employees *EmployeesFacade
 	Leave     *LeaveFacade
 	Payroll   *PayrollFacade
+	Users     *UsersFacade
 }
 
 func Initialize(ctx context.Context) (*Runtime, error) {
@@ -64,11 +65,22 @@ func Initialize(ctx context.Context) (*Runtime, error) {
 		return nil, fmt.Errorf("initialize payroll: %w", err)
 	}
 
+	usersFacade, err := NewUsersFacade(conn)
+	if err != nil {
+		_ = conn.Close()
+		return nil, fmt.Errorf("initialize users: %w", err)
+	}
+	if err := usersFacade.SeedInitialAdmin(ctx, cfg.InitialAdminUsername, cfg.InitialAdminPassword, cfg.InitialAdminRole); err != nil {
+		_ = conn.Close()
+		return nil, fmt.Errorf("seed initial admin: %w", err)
+	}
+
 	return &Runtime{
 		DB:        conn,
 		Auth:      authFacade,
 		Employees: employeesFacade,
 		Leave:     leaveFacade,
 		Payroll:   payrollFacade,
+		Users:     usersFacade,
 	}, nil
 }

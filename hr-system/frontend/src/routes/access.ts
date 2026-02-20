@@ -7,5 +7,6 @@ export function hasRole(auth: AuthContextValue, roles: UserRole[]): boolean {
   if (!role) {
     return false;
   }
-  return roles.includes(role as UserRole);
+  const normalized = role.trim().toLowerCase();
+  return roles.some((allowed) => allowed.toLowerCase() === normalized);
 }

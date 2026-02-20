@@ -8,13 +8,14 @@ import (
 )
 
 type User struct {
-	ID           int64     `db:"id"`
-	Username     string    `db:"username"`
-	PasswordHash string    `db:"password_hash"`
-	Role         string    `db:"role"`
-	IsActive     bool      `db:"is_active"`
-	CreatedAt    time.Time `db:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at"`
+	ID           int64        `db:"id"`
+	Username     string       `db:"username"`
+	PasswordHash string       `db:"password_hash"`
+	Role         string       `db:"role"`
+	IsActive     bool         `db:"is_active"`
+	CreatedAt    time.Time    `db:"created_at"`
+	UpdatedAt    time.Time    `db:"updated_at"`
+	LastLoginAt  sql.NullTime `db:"last_login_at"`
 }
 
 type RefreshToken struct {

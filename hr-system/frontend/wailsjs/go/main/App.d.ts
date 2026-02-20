@@ -4,6 +4,7 @@ import {main} from '../models';
 import {leave} from '../models';
 import {employees} from '../models';
 import {payroll} from '../models';
+import {users} from '../models';
 
 export function AdminLeaveBalance(arg1:string,arg2:number,arg3:number):Promise<main.LeaveBalanceResponse>;
 
@@ -23,6 +24,8 @@ export function CreateLeaveType(arg1:string,arg2:leave.LeaveTypeInput):Promise<m
 
 export function CreatePayrollBatch(arg1:string,arg2:payroll.CreateBatchInput):Promise<main.PayrollBatchResponse>;
 
+export function CreateUser(arg1:string,arg2:users.CreateInput):Promise<main.UserResponse>;
+
 export function DeactivateLeaveType(arg1:string,arg2:number):Promise<void>;
 
 export function DeleteEmployee(arg1:string,arg2:number):Promise<void>;
@@ -34,6 +37,8 @@ export function GeneratePayrollEntries(arg1:string,arg2:number):Promise<void>;
 export function GetEmployee(arg1:string,arg2:number):Promise<main.EmployeeResponse>;
 
 export function GetPayrollBatch(arg1:string,arg2:number):Promise<main.PayrollBatchDetailResponse>;
+
+export function GetUser(arg1:string,arg2:number):Promise<main.UserResponse>;
 
 export function Greet(arg1:string):Promise<string>;
 
@@ -48,6 +53,8 @@ export function ListLeaveTypes(arg1:string):Promise<main.LeaveTypeListResponse>;
 export function ListLockedLeaveDates(arg1:string,arg2:number):Promise<main.LockedDateListResponse>;
 
 export function ListPayrollBatches(arg1:string,arg2:payroll.BatchFilter):Promise<main.PayrollBatchListResponse>;
+
+export function ListUsers(arg1:string,arg2:users.ListFilter):Promise<main.UserListResponse>;
 
 export function LockLeaveDate(arg1:string,arg2:leave.LockDateInput):Promise<main.LockedDateResponse>;
 
@@ -69,6 +76,10 @@ export function Refresh(arg1:string):Promise<main.AuthResponse>;
 
 export function RejectLeave(arg1:string,arg2:number,arg3:leave.DecisionInput):Promise<main.LeaveRequestResponse>;
 
+export function ResetUserPassword(arg1:string,arg2:number,arg3:users.ResetPasswordInput):Promise<void>;
+
+export function SetUserStatus(arg1:string,arg2:number,arg3:users.StatusInput):Promise<main.UserResponse>;
+
 export function UnlockLeaveDate(arg1:string,arg2:string):Promise<void>;
 
 export function UpdateEmployee(arg1:string,arg2:number,arg3:employees.UpsertEmployeeInput):Promise<main.EmployeeResponse>;
@@ -76,3 +87,5 @@ export function UpdateEmployee(arg1:string,arg2:number,arg3:employees.UpsertEmpl
 export function UpdateLeaveType(arg1:string,arg2:number,arg3:leave.LeaveTypeInput):Promise<main.LeaveTypeResponse>;
 
 export function UpdatePayrollEntryAmounts(arg1:string,arg2:number,arg3:payroll.UpdateEntryAmountsInput):Promise<main.PayrollEntryResponse>;
+
+export function UpdateUser(arg1:string,arg2:number,arg3:users.UpdateInput):Promise<main.UserResponse>;
