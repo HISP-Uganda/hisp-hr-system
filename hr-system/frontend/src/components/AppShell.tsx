@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", roles: ["Admin", "HR Officer", "Finance Officer", "Viewer"] },
   { label: "Employees", to: "/employees", roles: ["Admin", "HR Officer"] },
   { label: "Departments", to: "/departments", roles: ["Admin", "HR Officer"] },
-  { label: "Leave", to: "/leave", roles: ["Admin", "HR Officer"] },
+  { label: "Leave", to: "/leave", roles: ["Admin", "HR Officer", "Finance Officer", "Viewer"] },
   { label: "Payroll", to: "/payroll", roles: ["Admin", "Finance Officer"] },
   { label: "Users", to: "/users", roles: ["Admin"] },
 ];

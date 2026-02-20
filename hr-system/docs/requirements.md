@@ -104,50 +104,483 @@ Search:
 
 ---
 
-## 3.4 Leave Management
+# 3.4 Leave Management
 
-### Leave Types
+## 3.4.1 Overview
+
+The system shall provide a complete leave management module that supports leave applications, approvals, entitlement tracking, calendar planning, attendance integration, and reporting.
+
+Leave management must support a centralized, role-based workflow with automatic leave balance calculations and validation.
+
+---
+
+## 3.4.2 Leave Types
+
+### Default Leave Types
+
+The system shall include the following default leave types:
+
 - Annual Leave
 - Sick Leave
 - Maternity Leave
+- Study Leave
 - Unpaid Leave
-- Custom types configurable
 
-### Features
+### Configurable Leave Types
+
+Administrators shall be able to:
+
+- Create new leave types
+- Edit existing leave types
+- Deactivate leave types
+
+Each leave type shall support the following properties:
+
+- Name
+- Paid / Unpaid (boolean)
+- Requires Attachment (boolean)
+- Requires Approval (boolean)
+- Counts Toward Annual Entitlement (boolean)
+- Active (boolean)
+
+---
+
+## 3.4.3 Leave Entitlements
+
+Each employee shall have defined leave entitlements per leave year.
+
+### Leave Year
+
+- Default leave year: Calendar year (January–December)
+- Future support for configurable leave year
+
+### Entitlement Fields Per Employee
+
+- Total Leave Days (Annual entitlement)
+- Reserved Leave Days (Non-usable buffer)
+- Year
+
+### Leave Balance Calculation
+
+Available Leave Days shall be calculated as:
+
+Available = Total Entitlement - Reserved Leave - (Approved Leave Days + Pending Leave Days)
+
+Rules:
+
+- Leave request cannot exceed available balance.
+- Leave balance recalculates automatically when:
+  - Leave is approved
+  - Leave is rejected
+  - Leave is cancelled
+  - Leave record is deleted
+  - Entitlement is modified
+
+---
+
+## 3.4.4 Leave Request Workflow
+
+### Employee Capabilities
+
+Employees shall be able to:
+
 - Apply for leave
-- Approve / Reject leave (HR/Admin)
-- Leave status: Pending, Approved, Rejected
-- Leave balance tracking
-- Leave history per employee
-- Automatic leave balance deduction upon approval
+- Select:
+  - Leave type
+  - Start date
+  - End date
+- View automatic working day calculation
+- View real-time leave balance validation
+- Edit leave request if status is Pending
+- Cancel leave request if status is Pending
+- View personal leave history
 
-### Leave Rules (MVP defaults)
-- Entitlement tracked per calendar year
-- Leave cannot exceed available balance (based on approved leave days)
+### Automatic Calculations
+
+When selecting Start Date and End Date, the system shall:
+
+1. Validate End Date ≥ Start Date
+2. Calculate working days only (exclude weekends)
+3. Exclude locked/restricted dates
+4. Prevent submission if:
+   - Insufficient leave balance
+   - Date range contains no working days
+   - Restricted dates are included
+   - Overlapping approved leave exists
+
+---
+
+## 3.4.5 Leave Status Lifecycle
+
+Each leave request shall have one of the following statuses:
+
+- Pending
+- Approved
+- Rejected
+- Cancelled
+
+### Status Transitions
+
+| From     | To        | Performed By |
+|----------|----------|--------------|
+| Pending  | Approved | HR/Admin     |
+| Pending  | Rejected | HR/Admin     |
+| Pending  | Cancelled | Employee    |
+| Approved | Cancelled | HR/Admin    |
+
+Approved leave shall immediately reduce available leave balance.
+
+Rejected or Cancelled leave shall restore leave balance.
+
+---
+
+## 3.4.6 Approval & Permissions
+
+### HR / Admin
+
+HR/Admin users shall be able to:
+
+- View all leave requests
+- Approve or Reject leave requests
+- Create leave requests on behalf of employees
+- Override leave balance (with justification)
+- Lock or unlock specific calendar dates
+- View department-level leave reports
+
+### Master Admin
+
+Master Admin shall additionally be able to:
+
+- Edit any leave record (including approved)
+- Delete leave records
+- Modify entitlement values
+
+### Staff Users
+
+Staff users shall:
+
+- Apply for leave
+- View personal leave history
+- Edit or cancel pending leave only
+- View personal leave balance
+
+---
+
+## 3.4.7 Leave Planner (Annual Calendar View)
+
+The system shall provide a year-based leave planner calendar.
+
+Each date in the calendar shall have one of the following states:
+
+- Available
+- Locked (Admin controlled)
+- Scheduled (Employee planning)
+
+### Locked Dates
+
+Locked dates:
+
+- Cannot be selected for leave
+- Are configurable in system settings
+- May represent:
+  - Public holidays
+  - Organizational blackout periods
+  - Critical operational dates
+
+---
+
+## 3.4.8 Attendance Integration
+
+The system shall integrate leave with attendance records.
+
+Capabilities:
+
+- Convert an Absence record to Approved Leave (1 day deduction)
+- Automatically update attendance status to “Leave”
+- Prevent conversion if insufficient leave balance
+
+---
+
+## 3.4.9 Reporting
+
+The system shall generate the following reports:
+
+- Leave requests report (by period)
+- Leave balances report
+- Leave usage by department
+- Leave history per employee
+- Export to CSV
+- Printable PDF output
+
+Reports shall support filtering by:
+
+- Department
+- Date range
+- Leave type
+- Employee
+
+---
+
+## 3.4.10 Data Model Requirements
+
+### LeaveRequest
+
+Fields:
+
+- id
+- employee_id
+- leave_type_id
+- start_date
+- end_date
+- working_days
+- status
+- reason (optional)
+- approved_by (nullable)
+- approved_at (nullable)
+- created_at
+- updated_at
+
+### LeaveType
+
+Fields:
+
+- id
+- name
+- paid (boolean)
+- counts_toward_entitlement (boolean)
+- requires_attachment (boolean)
+- requires_approval (boolean)
+- active (boolean)
+
+### LeaveEntitlement
+
+Fields:
+
+- employee_id
+- year
+- total_days
+- reserved_days
+
+---
+
+## 3.4.11 Future Enhancements (Non-MVP)
+
+The architecture shall allow future support for:
+
+- Leave carry-forward policy
+- Monthly accrual-based leave
+- Multi-level approval workflows
+- Email notifications
+- Attachment uploads (e.g., medical certificate)
+- Team leave overlap warnings
+- Departmental leave heatmap
+- Leave quotas per department
 
 ---
 
 ## 3.5 Payroll Management
 
-### Payroll Features
-- Monthly payroll processing using batches
-- Base salary per employee (from employee record)
-- Allowances (numeric)
-- Deductions (numeric)
-- Tax (numeric or percentage-based later; MVP uses numeric)
-- Gross + Net calculations server-side
+### 3.5.1 Overview
 
-### Payroll Workflow
-- Create batch (Draft)
-- Generate payroll entries for all active employees (transactional)
-- Edit entry values while Draft
-- Approve batch (Approved)
-- Lock batch (Locked; no further edits)
-- Export payroll batch to CSV
+The system shall provide a structured, batch-based payroll engine that supports:
 
-RBAC:
-- Finance Officer and Admin can manage payroll
-- Others: no access (or read-only if explicitly enabled later)
+- Monthly payroll processing
+- Transactional generation of payroll entries
+- Controlled approval workflow
+- Locking of finalized payroll
+- Server-side calculation of gross and net pay
+- Auditability and immutability after approval
+
+Payroll must be processed in discrete monthly batches.
+
+---
+
+## 3.5.2 Payroll Batches
+
+Payroll shall be processed per month using a Payroll Batch entity.
+
+### PayrollBatch Fields
+
+- id
+- month (YYYY-MM format)
+- status (Draft | Approved | Locked)
+- created_by
+- created_at
+- approved_by (nullable)
+- approved_at (nullable)
+- locked_at (nullable)
+
+### Batch Status Lifecycle
+
+| From     | To        | Performed By |
+|----------|----------|--------------|
+| Draft    | Approved | Finance/Admin |
+| Approved | Locked   | Finance/Admin |
+
+Rules:
+
+- Draft: Entries may be edited.
+- Approved: Entries are finalized but visible.
+- Locked: No further modifications allowed.
+- Locked batches are immutable.
+
+Only one batch per month shall be allowed.
+
+---
+
+## 3.5.3 Payroll Entries
+
+When a batch is created, payroll entries shall be generated transactionally for all active employees.
+
+### PayrollEntry Fields
+
+- id
+- batch_id
+- employee_id
+- base_salary
+- allowances_total
+- deductions_total
+- tax_total
+- gross_pay
+- net_pay
+- created_at
+- updated_at
+
+Entries are tied to a specific batch.
+
+---
+
+## 3.5.4 Payroll Calculation Rules
+
+All payroll calculations must be performed server-side.
+
+### Calculation Components
+
+1. Base Salary  
+   Retrieved from employee record.
+
+2. Allowances (numeric total for MVP)
+  - Stored per payroll entry
+  - Editable while batch is Draft
+
+3. Deductions (numeric total for MVP)
+  - Stored per payroll entry
+  - Editable while batch is Draft
+
+4. Tax (numeric for MVP)
+  - Manual numeric value
+  - Future: percentage-based or bracket-based engine
+
+### Gross Pay
+
+Gross Pay = Base Salary + Allowances
+
+### Net Pay
+
+Net Pay = Gross Pay - Deductions - Tax
+
+
+All computed values must be persisted in payroll_entries.
+
+---
+
+## 3.5.5 Payroll Generation (Transactional)
+
+When generating payroll entries for a Draft batch:
+
+- The operation must be transactional.
+- All active employees must receive an entry.
+- If any employee entry fails, the entire generation must roll back.
+- Regeneration is allowed only while batch is Draft.
+
+---
+
+## 3.5.6 Editing Rules
+
+While batch status is Draft:
+
+- Allowances may be edited.
+- Deductions may be edited.
+- Tax value may be edited.
+- Recalculation must occur server-side after edits.
+
+After batch is Approved:
+
+- No financial fields may be edited.
+- Only viewing and exporting allowed.
+
+After batch is Locked:
+
+- No changes permitted.
+- Entries are immutable.
+
+---
+
+## 3.5.7 Exporting Payroll
+
+The system shall support exporting a payroll batch to CSV.
+
+Export must include:
+
+- Employee Name
+- Base Salary
+- Allowances
+- Deductions
+- Tax
+- Gross Pay
+- Net Pay
+
+Export shall only be allowed for Approved or Locked batches.
+
+---
+
+## 3.5.8 RBAC (Role-Based Access Control)
+
+### Finance Officer
+- Create payroll batch
+- Generate payroll entries
+- Edit Draft batch
+- Approve batch
+- Lock batch
+- Export payroll
+
+### Admin
+- Same permissions as Finance Officer
+
+### Master Admin
+- All Finance/Admin capabilities
+- May unlock batch (optional if later enabled)
+- May delete Draft batch
+
+### Other Users
+- No access to payroll module
+- Future: optional read-only access if explicitly granted
+
+---
+
+## 3.5.9 Audit Requirements
+
+The system shall:
+
+- Record created_by and approved_by users
+- Prevent modification of Approved/Locked batches
+- Maintain payroll history per month
+- Prevent duplicate batches per month
+
+---
+
+## 3.5.10 Future Enhancements (Non-MVP)
+
+Architecture must allow future support for:
+
+- Per-allowance breakdown (multiple allowance types)
+- Per-deduction breakdown
+- Automated tax engine
+- Statutory contributions (NSSF, PAYE engine)
+- Payslip generation (PDF)
+- Bank transfer file export
+- Project-based salary allocation
+- Multi-currency payroll
 
 ---
 

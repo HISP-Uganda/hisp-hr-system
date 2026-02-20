@@ -11,8 +11,10 @@ import (
 )
 
 type Runtime struct {
-	DB   *sqlx.DB
-	Auth *AuthFacade
+	DB        *sqlx.DB
+	Auth      *AuthFacade
+	Employees *EmployeesFacade
+	Leave     *LeaveFacade
 }
 
 func Initialize(ctx context.Context) (*Runtime, error) {
@@ -43,8 +45,22 @@ func Initialize(ctx context.Context) (*Runtime, error) {
 		return nil, fmt.Errorf("initialize auth: %w", err)
 	}
 
+	employeesFacade, err := NewEmployeesFacade(conn)
+	if err != nil {
+		_ = conn.Close()
+		return nil, fmt.Errorf("initialize employees: %w", err)
+	}
+
+	leaveFacade, err := NewLeaveFacade(conn)
+	if err != nil {
+		_ = conn.Close()
+		return nil, fmt.Errorf("initialize leave: %w", err)
+	}
+
 	return &Runtime{
-		DB:   conn,
-		Auth: authFacade,
+		DB:        conn,
+		Auth:      authFacade,
+		Employees: employeesFacade,
+		Leave:     leaveFacade,
 	}, nil
 }

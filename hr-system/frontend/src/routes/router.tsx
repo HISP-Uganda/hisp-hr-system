@@ -4,6 +4,8 @@ import { AuthContextValue } from "../auth/AuthContext";
 import { LoginPage } from "../components/LoginPage";
 import { AppShell } from "../components/AppShell";
 import { SectionPage } from "../components/SectionPage";
+import { EmployeesPage } from "../modules/employees/EmployeesPage";
+import { LeavePage } from "../modules/leave/LeavePage";
 import { UserRole, hasRole } from "./access";
 
 type RouterContext = {
@@ -60,7 +62,7 @@ const employeesRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "employees",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "HR Officer"]),
-  component: () => <SectionPage title="Employees" description="Employee management UI will be implemented in Phase 5." />,
+  component: EmployeesPage,
 });
 
 const departmentsRoute = createRoute({
@@ -73,8 +75,8 @@ const departmentsRoute = createRoute({
 const leaveRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "leave",
-  beforeLoad: ({ context }) => requireRole(context, ["Admin", "HR Officer"]),
-  component: () => <SectionPage title="Leave" description="Leave workflow pages will be implemented in Phase 7." />,
+  beforeLoad: ({ context }) => requireRole(context, ["Admin", "HR Officer", "Finance Officer", "Viewer"]),
+  component: LeavePage,
 });
 
 const payrollRoute = createRoute({

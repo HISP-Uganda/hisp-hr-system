@@ -2,154 +2,158 @@
 ## Development Status Tracker
 ## Phase A – Online-First (JWT + SQLX + golang-migrate)
 
-Last Updated: 2026-02-20 06:06:29 UTC
+Last Updated: 2026-02-20 09:19:33 UTC
 
 ---
 
 # 1. Context Recovery Summary
 
-Current implementation includes:
-- Wails v2 desktop app bootstrapped and runnable
-- Backend foundation (config + SQLX + migrations)
-- Backend JWT auth service with refresh token storage/rotation
-- Frontend login flow + auth state bootstrap + protected shell
-- Main shell layout with role-aware sidebar visibility and route guards
+Implemented and working:
+- Wails v2 desktop runtime with Go backend + React frontend.
+- PostgreSQL connectivity via SQLX and startup migrations via golang-migrate.
+- JWT auth with refresh-token rotation and server-side revocation.
+- Role-aware app shell and protected routing.
+- Employees module (backend CRUD/search + frontend list/dialog workflows).
+- Leave module (backend business rules + frontend planner/apply/requests/balance flows).
 
-Not yet implemented:
-- Business modules (Employees/Departments/Leave/Payroll/User Management/Audit)
+Not implemented yet:
+- Departments module (Phase 6)
+- Payroll module (Phase 8)
+- User management module (Phase 9)
+- Audit logging module (Phase 10)
 - Structured logging integration
-- Seed/admin user creation path
-- TanStack Query data layer usage
+- TanStack Query integration
+- Seed/admin bootstrap workflow
 
 ---
 
 # 2. Implemented Architecture (Precise)
 
-## Backend runtime wiring
-- `app.go` initializes runtime at startup and stores DB/auth facade handles.
-- `app_auth.go` exposes Wails bindings:
-  - `Login(username, password)`
-  - `Refresh(refreshToken)`
-  - `Logout(refreshToken)`
-  - `Me(accessToken)`
-- `backend/bootstrap/foundation.go` loads config, runs migrations, opens SQLX DB, initializes auth facade.
+## Backend runtime and layering
+- Runtime wiring in `app.go` + `backend/bootstrap/foundation.go`.
+- Active facades:
+  - Auth: `backend/bootstrap/auth.go`
+  - Employees: `backend/bootstrap/employees.go`
+  - Leave: `backend/bootstrap/leave.go`
+- Bound Wails app APIs:
+  - Auth bindings: `app_auth.go`
+  - Employee bindings: `app_employees.go`
+  - Leave bindings: `app_leave.go`
+- Clean architecture followed per module:
+  - Wails app method -> facade/service -> repository -> SQLX/Postgres
 
-## Config/DB/Migrations
-- `backend/internal/config/config.go`
-  - Environment-driven config (`APP_DB_URL`, `APP_JWT_SECRET`, token TTLs, DB pool tuning, migration flags/path).
-- `backend/internal/db/db.go`
-  - SQLX connection setup using `pgx` stdlib and pool settings.
-- `backend/internal/db/migrate.go`
-  - `golang-migrate` runner for `file://` migrations path.
-- `backend/migrations/000001_init_schema.*.sql`
-  - Full schema created for all required Phase A tables:
-    - `users`, `refresh_tokens`, `departments`, `employees`, `leave_types`, `leave_requests`, `payroll_batches`, `payroll_entries`, `audit_logs`.
+## Database and migrations
+- Base schema: `backend/migrations/000001_init_schema.*.sql`
+- Leave extension migration: `backend/migrations/000002_leave_module.*.sql`
+  - Adds leave policy fields to `leave_types`
+  - Adds `leave_entitlements`
+  - Adds `leave_locked_dates`
+  - Extends `leave_requests` with `working_days` and status metadata fields
+  - Adds `employees.user_id` for self-service leave ownership resolution
 
-## Auth domain
-- `backend/internal/auth/*`
-  - SQLX auth repository (user lookup, refresh token insert/revoke/query-for-rotation).
-  - bcrypt hash/verify helpers.
-  - JWT access token generation/parsing (claims include `user_id`, `username`, `role`, expiry).
-  - Refresh token generation (random token + SHA-256 hash persisted).
-  - Login/Refresh/Logout service workflows.
-- `backend/internal/middleware/jwt.go`
-  - Token validation + user load + active-user check + auth context population.
-- `backend/internal/middleware/rbac.go`
-  - Role enforcement helper (`RequireRoles`).
+## Auth module (complete)
+- JWT access/refresh flow with hashed refresh tokens in DB.
+- Middleware + role checks:
+  - `backend/internal/middleware/jwt.go`
+  - `backend/internal/middleware/rbac.go`
 
-## Frontend auth and routing
-- `frontend/src/auth/AuthContext.tsx`
-  - Auth bootstrap on app load (`Me`, fallback to `Refresh`, otherwise clear session).
-  - Login/logout actions via Wails bindings.
-  - Session tokens persisted in localStorage.
-- `frontend/src/routes/router.tsx`
-  - Protected route tree with authenticated shell parent.
-  - Routes:
-    - `/dashboard`
-    - `/employees`
-    - `/departments`
-    - `/leave`
-    - `/payroll`
-    - `/users`
-  - Unauthorized route access redirects to `/dashboard`.
-  - Unauthenticated access redirects to `/login`.
-- `frontend/src/components/AppShell.tsx`
-  - Responsive sidebar + top bar + logout.
-  - Role-based menu visibility.
+## Employees module (complete)
+- Backend:
+  - `backend/internal/employees/repository.go`
+  - `backend/internal/employees/service.go`
+- Features:
+  - Create/Update/Delete/Get/List
+  - Name/department/status filtering with pagination
+  - Server-side validation
+  - Department integrity checks on create/update
+- Frontend:
+  - `frontend/src/modules/employees/EmployeesPage.tsx`
+  - Table + search + filters + create/edit/delete dialogs
+
+## Leave module (complete, implemented ahead of Department milestone by user request)
+- Backend domain:
+  - `backend/internal/leave/repository.go`
+  - `backend/internal/leave/service.go`
+  - `backend/internal/leave/rules.go`
+  - `backend/internal/leave/errors.go`
+- Core rules implemented:
+  - Working-days calculation server-side (weekends excluded)
+  - Reject invalid ranges / zero working days
+  - Reject locked-date collisions
+  - Reject overlaps with approved leave for same employee
+  - Balance formula enforcement:
+    - `available = entitlement_total - reserved - (pending + approved)`
+  - Status transitions:
+    - Pending -> Approved (HR/Admin)
+    - Pending -> Rejected (HR/Admin)
+    - Pending -> Cancelled (self or HR/Admin)
+    - Approved -> Cancelled (HR/Admin)
+  - Master-only edit/delete paths (role strings `Master` / `Master Admin`)
+- Leave UI:
+  - `frontend/src/modules/leave/LeavePage.tsx`
+  - Planner tab (locked dates)
+  - Apply form with working-days preview
+  - Requests/history with approve/reject/cancel controls
+  - Balance report view
+- API mapping notes:
+  - `docs/notes/leave.md` records mapping of requested REST semantics to Wails bindings.
 
 ---
 
-# 3. Completed Milestones
+# 3. Milestone Status
 
-✔ Phase 1 Foundation complete
-- Config loader, SQLX DB setup, migrations, startup migration runner.
+Completed:
+1. Phase 1 Foundation
+2. Phase 2 Authentication
+3. Phase 3 Login UI + auth state
+4. Phase 4 Main shell
+5. Phase 5 Employees module
+6. Phase 7 Leave module (out of sequence by explicit request)
 
-✔ Phase 2 Authentication backend complete
-- JWT + refresh tokens, bcrypt, repository/service/middleware, Wails auth bindings.
-
-✔ Phase 3 Login UI + auth state complete
-- Centered login form (MUI), auth bootstrap, protected rendering.
-
-✔ Phase 4 Main shell complete
-- Authenticated shell, sidebar/top bar, route guards, role-aware navigation.
+Not started:
+1. Phase 6 Departments module
+2. Phase 8 Payroll module
+3. Phase 9 User management
+4. Phase 10 Audit logging
+5. Phase 11 hardening
 
 ---
 
-# 4. Verified Build State
+# 4. Verified Build/Test State
 
-- Backend: `go test ./...` passes (current packages compile; limited tests exist).
+Most recent known verification:
+- Backend: `GOCACHE=$(pwd)/.gocache go test ./...` passes.
 - Frontend: `cd frontend && npm run build` passes.
+- Leave unit tests present:
+  - `backend/internal/leave/rules_test.go`
+  - `backend/internal/leave/service_test.go`
 
 ---
 
-# 5. Gaps and Risks (Current)
+# 5. Risks and Gaps
 
-## Functional gaps
-- No seeded/default user provisioning currently; login requires manually inserting a user with bcrypt hash.
-- Module backends (employees/departments/leave/payroll/users/audit actions) not yet implemented.
-- Route pages are placeholders; no module CRUD UI yet.
+Functional gaps:
+- Department CRUD and safe-delete enforcement still missing.
+- Attendance module is not implemented; leave conversion path contains TODO for full attendance state mutation.
 
-## Technical debt
-- Structured logging (zerolog/logrus) not integrated.
-- TanStack Query not yet integrated for data fetching/caching.
-- Auth token storage is currently localStorage-based (not in-memory only).
-- Backend RBAC middleware exists but has not yet been integrated across module handlers/services (because modules are not yet built).
+Testing gaps:
+- No DB-backed repository integration tests for leave/employees.
+- No end-to-end UI workflow tests.
 
-## Testing gaps
-- No integration tests for login/refresh/logout against a real DB.
-- No middleware/RBAC behavior tests.
+Technical debt:
+- Structured logging not integrated.
+- TanStack Query not used for frontend data layer yet.
+- Auth tokens still persisted via localStorage.
 
 ---
 
-# 6. Pending Work by Milestone
+# 6. Next Work Item (from status order)
 
-1. Phase 5 Employees Module
-- Backend CRUD + search/pagination + frontend table/dialogs.
-
-2. Phase 6 Departments Module
-- CRUD + safe delete rule (prevent delete with assigned employees).
-
-3. Phase 7 Leave Module
-- Leave types + leave requests + approval/balance logic.
-
-4. Phase 8 Payroll Module
-- Batch lifecycle + transactional entry generation + CSV export.
-
-5. Phase 9 User Management
-- Admin user CRUD, activate/deactivate, reset password.
-
-6. Phase 10 Audit Logging
-- Event logger integration for required critical actions.
-
-7. Phase 11 Hardening
-- RBAC/validation/error handling audit, tests, cross-platform build checks.
-
----
-
-# 7. Next Immediate Action
-
-➡ Execute Codex Prompt #5 (Employees Module)
-Goal: Deliver first business module end-to-end (backend CRUD/search + frontend table/dialogs).
+Next NOT STARTED item:
+- Phase 6 Departments module
+  - Backend CRUD
+  - Enforce delete protection when employees are assigned
+  - Frontend departments list + dialogs
 
 ---
 

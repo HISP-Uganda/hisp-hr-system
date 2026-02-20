@@ -177,61 +177,187 @@ Deliver:
 
 ---
 
-# 7. LEAVE MODULE
+# 7. LEAVE MODULE (UPDATED TO MATCH requirements.md 3.4)
 
-Backend:
+Implement Leave Management end-to-end per docs/requirements.md Section 3.4.
 
-- leave_types CRUD
+Backend (Go + SQLX):
+- leave_types CRUD:
+  - create, update, deactivate/list active
+- leave_locked_dates:
+  - admin can lock/unlock dates (global restricted dates)
+  - list locked dates (for planner + validation)
+- leave_entitlements:
+  - per employee per year: total_days, reserved_days (defaults from employee config are acceptable for MVP)
 - leave_requests:
-    - ApplyLeave
-    - ApproveLeave
-    - RejectLeave
-- Compute days_requested server-side
-- Enforce:
-    - Calendar year entitlement
-    - Cannot exceed available balance
-- Add LeaveSummary query
+  - ApplyLeave (staff for self; admin can apply on behalf):
+    - fields: leave_type_id, start_date, end_date, optional reason
+    - server calculates working_days excluding weekends
+    - reject if end_date < start_date
+    - reject if range contains 0 working days
+    - reject if any locked date falls within the requested working days
+    - reject if overlaps any APPROVED leave for same employee
+    - reject if working_days > available balance where:
+      available = total - reserved - (pending + approved days)
+  - ApproveLeave (admin/hr):
+    - enforce status transition Pending -> Approved
+  - RejectLeave (admin/hr):
+    - enforce status transition Pending -> Rejected
+  - CancelLeave:
+    - staff can cancel Pending only
+    - admin/hr can cancel Approved (optional for MVP if already in spec)
+  - Master-only: edit/delete any leave record (including approved)
 
-Frontend:
+- Leave balance endpoints:
+  - GetMyLeaveBalance(year)
+  - Admin: GetLeaveBalance(employee_id, year)
+  - LeaveBalancesReport (filter by department optional)
+- Leave reports:
+  - LeaveReport: filter by date range, department, employee, leave type, status
+  - Provide CSV export response for reports (or a reusable exporter)
 
-- Leave Types page
-- Leave Requests page
-- Approval buttons (HR/Admin only)
-- Status chips (Pending/Approved/Rejected)
+Attendance integration:
+- Endpoint to convert an absence record -> approved leave (1 day) with balance check
+  (If attendance module not implemented yet, stub the integration and leave TODO + tests.)
 
-Deliver:
-- Working leave workflow
-- Update docs/status.md
+Frontend (Wails React + MUI + TypeScript):
+- Leave Types page (admin):
+  - list/add/edit/activate/deactivate
+- Leave Planner page:
+  - year view calendar grid
+  - staff: schedule/unschedule personal plans (optional MVP)
+  - admin: lock/unlock dates (required)
+- Apply Leave form:
+  - start/end date inputs
+  - auto-calc days excluding weekends
+  - inline errors (locked dates, insufficient balance, invalid range)
+- Requests & History:
+  - staff: see own requests + status chips; cancel pending
+  - admin/hr: see all pending; approve/reject buttons; filters
+  - master: edit/delete controls
+
+Testing (required):
+- Unit tests for working-days calculation:
+  - excludes weekends
+  - handles same-day range
+  - handles invalid ranges
+  - handles locked-date collisions
+- Unit tests for balance validation:
+  - counts pending + approved
+  - respects reserved days
+- Minimal API tests for apply/approve/reject.
+
+Docs:
+- Update docs/status.md as items complete
+- Add short implementation notes in docs/notes/leave.md
+- Do not change docs/requirements.md unless contradictions are found; if so, propose a minimal patch.
 
 ---
 
 # 8. PAYROLL MODULE
 
+Goal: Implement batch-based payroll per docs/requirements.md 3.5 (Draft → Approved → Locked),
+with server-side gross/net calculations and strict RBAC.
+
 Backend:
 
-- CreateBatch(month, year)
-- GenerateEntries(batch_id):
-    - For each active employee
-    - Insert payroll entry
-    - Must use DB transaction
-- UpdateEntryAmounts (Draft only)
-- ApproveBatch
-- LockBatch
-- Enforce:
-    - No edits after lock
-- CSV export generator
+- Data model (must match requirements.md 3.5):
+  - payroll_batches:
+      - id
+      - month (YYYY-MM)
+      - status (Draft | Approved | Locked)
+      - created_by, created_at
+      - approved_by, approved_at (nullable)
+      - locked_at (nullable)
+      - Enforce: only one batch per month
+  - payroll_entries:
+      - id
+      - batch_id
+      - employee_id
+      - base_salary
+      - allowances_total (numeric)
+      - deductions_total (numeric)
+      - tax_total (numeric)
+      - gross_pay (computed)
+      - net_pay (computed)
+      - created_at, updated_at
 
-Frontend:
+- Core operations:
+  - CreateBatch(month YYYY-MM):
+      - status = Draft
+      - reject if month already exists
+  - GenerateEntries(batch_id) (transactional):
+      - only allowed if batch.status == Draft
+      - for each active employee:
+          - base_salary from employee record
+          - set allowances_total=0, deductions_total=0, tax_total=0
+          - compute gross/net server-side and persist
+      - must run in a DB transaction; rollback on any failure
+      - allow regenerate while Draft (either delete+recreate entries transactionally OR upsert safely)
+  - UpdateEntryAmounts(entry_id, allowances_total, deductions_total, tax_total):
+      - only if parent batch.status == Draft
+      - recompute gross_pay and net_pay server-side and persist
+  - ApproveBatch(batch_id):
+      - only if status == Draft
+      - set status=Approved, approved_by/approved_at
+  - LockBatch(batch_id):
+      - only if status == Approved
+      - set status=Locked, locked_at
+  - Enforce immutability:
+      - no edits/regeneration/export rules must follow batch status rules
 
-- Batch list
-- Batch detail table
-- Edit allowances/deductions
-- Approve/Lock buttons
-- CSV export button
+- Calculation rules (server-side, persisted):
+  - gross_pay = base_salary + allowances_total
+  - net_pay   = gross_pay - deductions_total - tax_total
+
+- Export:
+  - ExportBatchCSV(batch_id):
+      - allowed only if status in (Approved, Locked)
+      - columns: Employee Name, Base Salary, Allowances, Deductions, Tax, Gross Pay, Net Pay
+
+- RBAC:
+  - Finance Officer + Admin: manage payroll (create/generate/edit draft/approve/lock/export)
+  - Others: no payroll access
+  - If your RBAC currently only supports admin, extend roles to include finance_officer and enforce.
+
+- API surface (if using HTTP layer) OR Wails bindings:
+  - ListBatches(filter by month/status)
+  - GetBatch(batch_id) + entries
+  - CreateBatch
+  - GenerateEntries
+  - UpdateEntryAmounts
+  - ApproveBatch
+  - LockBatch
+  - ExportBatchCSV
+
+- Testing (required):
+  - unit tests for calculation (gross/net)
+  - unit tests for status transition rules
+  - integration test: generate entries is transactional (fail one insert -> rollback)
+
+Frontend (Wails React + MUI + TypeScript):
+
+- Payroll Batches page:
+  - list batches (month, status)
+  - create batch (month picker)
+  - open batch detail
+- Batch Detail page:
+  - entries table (employee, base, allowances, deductions, tax, gross, net)
+  - inline edit allowances/deductions/tax ONLY when Draft
+  - Approve button (Draft only)
+  - Lock button (Approved only)
+  - CSV export button (Approved/Locked only)
+  - show status badge + audit fields (created/approved/locked timestamps)
+- Access control:
+  - Payroll menu and routes visible only to Finance/Admin
 
 Deliver:
-- Complete payroll lifecycle
+- Complete payroll lifecycle implemented end-to-end (DB → backend → UI)
+- Server-side persisted calculations
+- RBAC enforced
+- CSV export working
 - Update docs/status.md
+- Add docs/notes/payroll.md with endpoints/bindings and key rules
 
 ---
 

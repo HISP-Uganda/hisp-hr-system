@@ -15,6 +15,8 @@ type App struct {
 	ctx        context.Context
 	db         *sqlx.DB
 	auth       *bootstrap.AuthFacade
+	employees  *bootstrap.EmployeesFacade
+	leave      *bootstrap.LeaveFacade
 	startupErr error
 }
 
@@ -36,6 +38,8 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.db = runtime.DB
 	a.auth = runtime.Auth
+	a.employees = runtime.Employees
+	a.leave = runtime.Leave
 
 	log.Printf("backend foundation initialized")
 }
