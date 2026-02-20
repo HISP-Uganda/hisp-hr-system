@@ -2,181 +2,154 @@
 ## Development Status Tracker
 ## Phase A – Online-First (JWT + SQLX + golang-migrate)
 
-Last Updated: 2026-02-20 05:12:10 UTC
+Last Updated: 2026-02-20 06:06:29 UTC
 
 ---
 
-# 1. Project State
+# 1. Context Recovery Summary
 
-Authoritative specification:
-- docs/requirements.md (JWT-based auth, SQLX, golang-migrate)
+Current implementation includes:
+- Wails v2 desktop app bootstrapped and runnable
+- Backend foundation (config + SQLX + migrations)
+- Backend JWT auth service with refresh token storage/rotation
+- Frontend login flow + auth state bootstrap + protected shell
+- Main shell layout with role-aware sidebar visibility and route guards
 
-Technology stack confirmed:
-- Wails v2
-- Go 1.22+
-- React + TypeScript
-- Material UI (MUI v5+)
-- TanStack Router
-- TanStack Query
-- PostgreSQL >= 13
-- SQLX
-- golang-migrate
-- JWT (access + refresh tokens)
+Not yet implemented:
+- Business modules (Employees/Departments/Leave/Payroll/User Management/Audit)
+- Structured logging integration
+- Seed/admin user creation path
+- TanStack Query data layer usage
 
 ---
 
-# 2. Completed
+# 2. Implemented Architecture (Precise)
 
-✔ Phase A scope finalized
-✔ Payroll included in Phase A
-✔ Leave Management included in Phase A
-✔ JWT authentication selected (access + refresh tokens)
-✔ SQLX selected for DB access
-✔ golang-migrate selected for migrations
-✔ Logical database schema fully defined
-✔ RBAC roles defined:
-    - Admin
-    - HR Officer
-    - Finance Officer
-    - Viewer
-✔ Audit logging requirements defined
-✔ Codex workflow prompts prepared
-✔ Foundation phase executed (Codex Prompt #1)
-✔ Authentication backend phase executed (Codex Prompt #2)
-✔ Login UI + Auth State phase executed (Codex Prompt #3):
-    - Added backend Wails auth bindings in `app_auth.go`:
-        - `Login(username, password)`
-        - `Refresh(refreshToken)`
-        - `Logout(refreshToken)`
-        - `Me(accessToken)`
-    - Extended bootstrap runtime auth wiring:
-        - `backend/bootstrap/foundation.go`
-        - `backend/bootstrap/auth.go`
-    - Added frontend auth state management:
-        - `frontend/src/auth/AuthContext.tsx`
-        - token storage + session bootstrap/refresh
-    - Added small centered MUI login screen:
-        - `frontend/src/components/LoginPage.tsx`
-    - Added protected routing with TanStack Router:
-        - `frontend/src/routes/router.tsx`
-        - login route + authenticated route guard
-    - Ensured shell is not rendered before auth:
-        - `AppRouter` returns nothing while auth initializes
-        - protected route redirects unauthenticated users to `/login`
-    - Added authenticated shell placeholder with logout:
-        - `frontend/src/components/ShellPage.tsx`
-    - Updated Wails frontend bindings:
-        - `frontend/wailsjs/go/main/App.js`
-        - `frontend/wailsjs/go/main/App.d.ts`
-    - Verification passed:
-        - `go test ./...`
-        - `cd frontend && npm run build`
+## Backend runtime wiring
+- `app.go` initializes runtime at startup and stores DB/auth facade handles.
+- `app_auth.go` exposes Wails bindings:
+  - `Login(username, password)`
+  - `Refresh(refreshToken)`
+  - `Logout(refreshToken)`
+  - `Me(accessToken)`
+- `backend/bootstrap/foundation.go` loads config, runs migrations, opens SQLX DB, initializes auth facade.
 
----
+## Config/DB/Migrations
+- `backend/internal/config/config.go`
+  - Environment-driven config (`APP_DB_URL`, `APP_JWT_SECRET`, token TTLs, DB pool tuning, migration flags/path).
+- `backend/internal/db/db.go`
+  - SQLX connection setup using `pgx` stdlib and pool settings.
+- `backend/internal/db/migrate.go`
+  - `golang-migrate` runner for `file://` migrations path.
+- `backend/migrations/000001_init_schema.*.sql`
+  - Full schema created for all required Phase A tables:
+    - `users`, `refresh_tokens`, `departments`, `employees`, `leave_types`, `leave_requests`, `payroll_batches`, `payroll_entries`, `audit_logs`.
 
-# 3. In Progress
+## Auth domain
+- `backend/internal/auth/*`
+  - SQLX auth repository (user lookup, refresh token insert/revoke/query-for-rotation).
+  - bcrypt hash/verify helpers.
+  - JWT access token generation/parsing (claims include `user_id`, `username`, `role`, expiry).
+  - Refresh token generation (random token + SHA-256 hash persisted).
+  - Login/Refresh/Logout service workflows.
+- `backend/internal/middleware/jwt.go`
+  - Token validation + user load + active-user check + auth context population.
+- `backend/internal/middleware/rbac.go`
+  - Role enforcement helper (`RequireRoles`).
 
-🚧 Phase 4: Main Shell
-
-Planned implementation tasks:
-- Sidebar navigation
-- Top bar with username + role + logout
-- Route-based menu visibility
-- Hide unauthorized menu items
-- Fully protected app routes
+## Frontend auth and routing
+- `frontend/src/auth/AuthContext.tsx`
+  - Auth bootstrap on app load (`Me`, fallback to `Refresh`, otherwise clear session).
+  - Login/logout actions via Wails bindings.
+  - Session tokens persisted in localStorage.
+- `frontend/src/routes/router.tsx`
+  - Protected route tree with authenticated shell parent.
+  - Routes:
+    - `/dashboard`
+    - `/employees`
+    - `/departments`
+    - `/leave`
+    - `/payroll`
+    - `/users`
+  - Unauthorized route access redirects to `/dashboard`.
+  - Unauthenticated access redirects to `/login`.
+- `frontend/src/components/AppShell.tsx`
+  - Responsive sidebar + top bar + logout.
+  - Role-based menu visibility.
 
 ---
 
-# 4. Pending Milestones
+# 3. Completed Milestones
 
-## Foundation
-- Add structured logging (zerolog or logrus) across backend
+✔ Phase 1 Foundation complete
+- Config loader, SQLX DB setup, migrations, startup migration runner.
 
-## Main Shell
-- Sidebar navigation
-- Top bar with user info
-- Route-based access visibility
-- Hide unauthorized menu items
+✔ Phase 2 Authentication backend complete
+- JWT + refresh tokens, bcrypt, repository/service/middleware, Wails auth bindings.
 
-## Employees Module
-- CRUD backend
-- Search (name, department, status)
-- Frontend table + dialogs
+✔ Phase 3 Login UI + auth state complete
+- Centered login form (MUI), auth bootstrap, protected rendering.
 
-## Departments Module
-- CRUD backend
-- Enforce safe delete rule
-- Department UI
-
-## Leave Module
-- leave_types CRUD
-- leave_requests workflow
-- Calendar-year entitlement logic
-- Balance computation
-- Approval workflow (HR/Admin)
-- Leave UI
-
-## Payroll Module
-- payroll_batches workflow
-- payroll_entries generation (transactional)
-- Draft → Approved → Locked logic
-- Net salary calculation server-side
-- CSV export
-- Payroll UI
-
-## User Management
-- Admin-only CRUD
-- Activate/deactivate
-- Reset password
-
-## Audit Logging
-- Event logging helpers
-- Record critical actions
-
-## Hardening & QA
-- Input validation review
-- RBAC enforcement review
-- Error handling standardization
-- Cross-platform build test
-- Basic service-layer tests
+✔ Phase 4 Main shell complete
+- Authenticated shell, sidebar/top bar, route guards, role-aware navigation.
 
 ---
 
-# 5. Architectural Decisions
+# 4. Verified Build State
 
-1. Online-first centralized PostgreSQL
-2. JWT-based authentication with refresh tokens stored server-side (hashed)
-3. SQLX for explicit SQL and performance control
-4. golang-migrate for versioned schema management
-5. Clean backend architecture:
-   handlers → services → repositories → db
-6. Payroll operations MUST be transactional
-7. Leave balance tracked per calendar year
-8. Department deletion prohibited if employees are assigned
+- Backend: `go test ./...` passes (current packages compile; limited tests exist).
+- Frontend: `cd frontend && npm run build` passes.
 
 ---
 
-# 6. Technical Debt
+# 5. Gaps and Risks (Current)
 
-- Structured logging is not yet integrated in backend flows.
-- TanStack Query is not yet wired into auth/module data fetching.
+## Functional gaps
+- No seeded/default user provisioning currently; login requires manually inserting a user with bcrypt hash.
+- Module backends (employees/departments/leave/payroll/users/audit actions) not yet implemented.
+- Route pages are placeholders; no module CRUD UI yet.
+
+## Technical debt
+- Structured logging (zerolog/logrus) not integrated.
+- TanStack Query not yet integrated for data fetching/caching.
+- Auth token storage is currently localStorage-based (not in-memory only).
+- Backend RBAC middleware exists but has not yet been integrated across module handlers/services (because modules are not yet built).
+
+## Testing gaps
+- No integration tests for login/refresh/logout against a real DB.
+- No middleware/RBAC behavior tests.
 
 ---
 
-# 7. Known Risks
+# 6. Pending Work by Milestone
 
-- Payroll rules may evolve (tax logic, allowances structure)
-- Leave calculation edge cases (overlaps, cross-year leave)
-- Token revocation logic must be carefully implemented
-- RBAC consistency across all handlers
-- Future offline extension will require architectural layering
+1. Phase 5 Employees Module
+- Backend CRUD + search/pagination + frontend table/dialogs.
+
+2. Phase 6 Departments Module
+- CRUD + safe delete rule (prevent delete with assigned employees).
+
+3. Phase 7 Leave Module
+- Leave types + leave requests + approval/balance logic.
+
+4. Phase 8 Payroll Module
+- Batch lifecycle + transactional entry generation + CSV export.
+
+5. Phase 9 User Management
+- Admin user CRUD, activate/deactivate, reset password.
+
+6. Phase 10 Audit Logging
+- Event logger integration for required critical actions.
+
+7. Phase 11 Hardening
+- RBAC/validation/error handling audit, tests, cross-platform build checks.
 
 ---
 
-# 8. Next Immediate Action
+# 7. Next Immediate Action
 
-➡ Execute Codex Prompt #4 (Main Shell)
-Goal: Build final authenticated shell layout with role-aware navigation and route/menu visibility.
+➡ Execute Codex Prompt #5 (Employees Module)
+Goal: Deliver first business module end-to-end (backend CRUD/search + frontend table/dialogs).
 
 ---
 
