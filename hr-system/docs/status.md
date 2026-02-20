@@ -2,7 +2,7 @@
 ## Development Status Tracker
 ## Phase A – Online-First (JWT + SQLX + golang-migrate)
 
-Last Updated: 2026-02-20 09:19:33 UTC
+Last Updated: 2026-02-20 09:33:00 UTC
 
 ---
 
@@ -15,10 +15,10 @@ Implemented and working:
 - Role-aware app shell and protected routing.
 - Employees module (backend CRUD/search + frontend list/dialog workflows).
 - Leave module (backend business rules + frontend planner/apply/requests/balance flows).
+- Payroll module (batch lifecycle, transactional generation, draft edits, approval/lock, CSV export).
 
 Not implemented yet:
 - Departments module (Phase 6)
-- Payroll module (Phase 8)
 - User management module (Phase 9)
 - Audit logging module (Phase 10)
 - Structured logging integration
@@ -50,6 +50,10 @@ Not implemented yet:
   - Adds `leave_locked_dates`
   - Extends `leave_requests` with `working_days` and status metadata fields
   - Adds `employees.user_id` for self-service leave ownership resolution
+- Payroll alignment migration: `backend/migrations/000003_payroll_module.*.sql`
+  - Aligns `payroll_batches` to month format `YYYY-MM` and audit fields (`created_by`, `approved_by`, `approved_at`, `locked_at`)
+  - Aligns `payroll_entries` naming to requirements (`base_salary`, `allowances_total`, `deductions_total`, `tax_total`, `gross_pay`, `net_pay`)
+  - Persists server-side computed `gross_pay`/`net_pay`
 
 ## Auth module (complete)
 - JWT access/refresh flow with hashed refresh tokens in DB.
@@ -98,6 +102,31 @@ Not implemented yet:
 - API mapping notes:
   - `docs/notes/leave.md` records mapping of requested REST semantics to Wails bindings.
 
+## Payroll module (complete)
+- Backend domain:
+  - `backend/internal/payroll/repository.go`
+  - `backend/internal/payroll/service.go`
+  - `backend/internal/payroll/calculation.go`
+  - `backend/internal/payroll/errors.go`
+- Wails/app wiring:
+  - `backend/bootstrap/payroll.go`
+  - `app_payroll.go`
+- Core rules implemented:
+  - Batch lifecycle: `Draft -> Approved -> Locked`
+  - One batch per month (`YYYY-MM`) enforced in DB
+  - Entry generation for active employees only, transactional with rollback on any failure
+  - Regeneration allowed while Draft (delete+recreate in one transaction)
+  - Draft-only financial edits with server-side recompute and persisted gross/net
+  - Approve only from Draft; Lock only from Approved
+  - CSV export restricted to `Approved`/`Locked`
+  - RBAC enforced server-side for payroll methods (`Admin` and `Finance Officer` only)
+- Payroll UI:
+  - `frontend/src/modules/payroll/PayrollBatchesPage.tsx`
+  - `frontend/src/modules/payroll/PayrollBatchDetailPage.tsx`
+  - Route additions in `frontend/src/routes/router.tsx` for `/payroll` and `/payroll/$batchId`
+- API mapping notes:
+  - `docs/notes/payroll.md` records binding surface and business rules.
+
 ---
 
 # 3. Milestone Status
@@ -109,13 +138,13 @@ Completed:
 4. Phase 4 Main shell
 5. Phase 5 Employees module
 6. Phase 7 Leave module (out of sequence by explicit request)
+7. Phase 8 Payroll module (implemented ahead of Phase 6 by explicit request)
 
 Not started:
 1. Phase 6 Departments module
-2. Phase 8 Payroll module
-3. Phase 9 User management
-4. Phase 10 Audit logging
-5. Phase 11 hardening
+2. Phase 9 User management
+3. Phase 10 Audit logging
+4. Phase 11 hardening
 
 ---
 
@@ -127,6 +156,10 @@ Most recent known verification:
 - Leave unit tests present:
   - `backend/internal/leave/rules_test.go`
   - `backend/internal/leave/service_test.go`
+- Payroll tests present:
+  - `backend/internal/payroll/calculation_test.go`
+  - `backend/internal/payroll/service_test.go`
+  - `backend/internal/payroll/repository_integration_test.go` (requires `PAYROLL_TEST_DATABASE_URL`; skips when unset)
 
 ---
 

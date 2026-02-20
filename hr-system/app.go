@@ -17,6 +17,7 @@ type App struct {
 	auth       *bootstrap.AuthFacade
 	employees  *bootstrap.EmployeesFacade
 	leave      *bootstrap.LeaveFacade
+	payroll    *bootstrap.PayrollFacade
 	startupErr error
 }
 
@@ -40,6 +41,7 @@ func (a *App) startup(ctx context.Context) {
 	a.auth = runtime.Auth
 	a.employees = runtime.Employees
 	a.leave = runtime.Leave
+	a.payroll = runtime.Payroll
 
 	log.Printf("backend foundation initialized")
 }

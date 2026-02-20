@@ -6,6 +6,8 @@ import { AppShell } from "../components/AppShell";
 import { SectionPage } from "../components/SectionPage";
 import { EmployeesPage } from "../modules/employees/EmployeesPage";
 import { LeavePage } from "../modules/leave/LeavePage";
+import { PayrollBatchesPage } from "../modules/payroll/PayrollBatchesPage";
+import { PayrollBatchDetailPage } from "../modules/payroll/PayrollBatchDetailPage";
 import { UserRole, hasRole } from "./access";
 
 type RouterContext = {
@@ -83,7 +85,14 @@ const payrollRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "payroll",
   beforeLoad: ({ context }) => requireRole(context, ["Admin", "Finance Officer"]),
-  component: () => <SectionPage title="Payroll" description="Payroll workflow pages will be implemented in Phase 8." />,
+  component: PayrollBatchesPage,
+});
+
+const payrollDetailRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: "payroll/$batchId",
+  beforeLoad: ({ context }) => requireRole(context, ["Admin", "Finance Officer"]),
+  component: PayrollBatchDetailPage,
 });
 
 const usersRoute = createRoute({
@@ -101,6 +110,7 @@ const routeTree = rootRoute.addChildren([
     departmentsRoute,
     leaveRoute,
     payrollRoute,
+    payrollDetailRoute,
     usersRoute,
   ]),
 ]);

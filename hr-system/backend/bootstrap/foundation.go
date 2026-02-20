@@ -15,6 +15,7 @@ type Runtime struct {
 	Auth      *AuthFacade
 	Employees *EmployeesFacade
 	Leave     *LeaveFacade
+	Payroll   *PayrollFacade
 }
 
 func Initialize(ctx context.Context) (*Runtime, error) {
@@ -57,10 +58,17 @@ func Initialize(ctx context.Context) (*Runtime, error) {
 		return nil, fmt.Errorf("initialize leave: %w", err)
 	}
 
+	payrollFacade, err := NewPayrollFacade(conn)
+	if err != nil {
+		_ = conn.Close()
+		return nil, fmt.Errorf("initialize payroll: %w", err)
+	}
+
 	return &Runtime{
 		DB:        conn,
 		Auth:      authFacade,
 		Employees: employeesFacade,
 		Leave:     leaveFacade,
+		Payroll:   payrollFacade,
 	}, nil
 }

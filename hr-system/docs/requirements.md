@@ -585,10 +585,169 @@ Architecture must allow future support for:
 ---
 
 ## 3.6 User Management (Admin Only)
-- Create system users
-- Assign role
-- Activate/deactivate accounts
-- Reset passwords
+
+### Overview
+
+This module allows administrators to manage system users.
+
+Only users with role `admin` may access this functionality (both backend APIs and frontend UI).
+
+---
+
+## Backend Requirements
+
+### Access Control
+- All endpoints require:
+    - Valid JWT
+    - Role = `admin`
+
+---
+
+### Data Model
+
+Minimum fields for `users` table:
+
+- `id` (int, primary key)
+- `username` (unique, indexed, required)
+- `password_hash` (required)
+- `role` (string, required)
+- `is_active` (boolean, default true)
+- `created_at` (timestamp)
+- `updated_at` (timestamp)
+- `last_login_at` (nullable timestamp)
+
+---
+
+### Endpoints
+
+#### 1. Create User
+- Admin only
+- Input:
+    - username
+    - password
+    - role
+- Validation:
+    - Username must be unique
+    - Password must meet minimum length requirement
+- Password must be hashed before storage
+- Response must not include password
+
+---
+
+#### 2. Update User
+- Admin only
+- Allows updating:
+    - username
+    - role
+- Must not update password here
+- Returns updated user
+
+---
+
+#### 3. Get User
+- Admin only
+- Fetch single user by ID
+- Must not return password
+
+---
+
+#### 4. List Users
+- Admin only
+- Supports:
+    - Pagination (`page`, `pageSize`)
+    - Optional search (`q`) by username
+- Returns:
+    - List of users
+    - Total count
+
+---
+
+#### 5. Reset Password
+- Admin only
+- Input:
+    - new password
+- Must hash password before saving
+- Return success response only
+
+---
+
+#### 6. Activate / Deactivate User
+- Admin only
+- Toggle `is_active`
+- System must prevent an admin from deactivating their own account
+- Return updated user
+
+---
+
+### Security Requirements
+
+- Passwords must use a strong hashing algorithm (bcrypt or argon2).
+- Passwords must never be returned in API responses.
+- All user management actions must be logged in audit logs.
+
+---
+
+## Frontend Requirements (React + MUI)
+
+### Access
+- Users page visible only to `admin` role.
+
+---
+
+### Users Page
+
+Features:
+- Users table
+- Pagination controls
+- Search input (username)
+- Columns:
+    - Username
+    - Role
+    - Status (Active/Inactive)
+    - Created At
+    - Actions
+
+---
+
+### Create User Dialog
+- Username field
+- Password field
+- Role selector
+- Validation
+- Submit button
+
+---
+
+### Edit User Dialog
+- Edit username
+- Change role
+- Save button
+
+---
+
+### Reset Password Dialog
+- New password
+- Confirm password
+- Validation
+- Submit button
+
+---
+
+### Activate / Deactivate Control
+- Toggle or action button
+- Confirmation dialog before change
+
+---
+
+## Deliverables
+
+- Admin can:
+    - Create users
+    - Assign/change roles
+    - Reset passwords
+    - Activate/deactivate users
+    - Search and paginate users
+    - Initial admin user seeded via environment configuration
 
 ---
 

@@ -995,6 +995,369 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class PayrollBatchDetailResponse {
+	    success: boolean;
+	    message: string;
+	    data: payroll.BatchDetail;
+	
+	    static createFrom(source: any = {}) {
+	        return new PayrollBatchDetailResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	        this.data = this.convertValues(source["data"], payroll.BatchDetail);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class PayrollBatchListResponse {
+	    success: boolean;
+	    message: string;
+	    data: payroll.BatchListResult;
+	
+	    static createFrom(source: any = {}) {
+	        return new PayrollBatchListResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	        this.data = this.convertValues(source["data"], payroll.BatchListResult);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class PayrollBatchResponse {
+	    success: boolean;
+	    message: string;
+	    data: payroll.Batch;
+	
+	    static createFrom(source: any = {}) {
+	        return new PayrollBatchResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	        this.data = this.convertValues(source["data"], payroll.Batch);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class PayrollCSVResponse {
+	    success: boolean;
+	    message: string;
+	    data: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PayrollCSVResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	        this.data = source["data"];
+	    }
+	}
+	export class PayrollEntryResponse {
+	    success: boolean;
+	    message: string;
+	    data: payroll.Entry;
+	
+	    static createFrom(source: any = {}) {
+	        return new PayrollEntryResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.message = source["message"];
+	        this.data = this.convertValues(source["data"], payroll.Entry);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+
+}
+
+export namespace payroll {
+	
+	export class Batch {
+	    id: number;
+	    month: string;
+	    status: string;
+	    created_by: number;
+	    // Go type: time
+	    created_at: any;
+	    approved_by?: number;
+	    // Go type: time
+	    approved_at?: any;
+	    // Go type: time
+	    locked_at?: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Batch(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.month = source["month"];
+	        this.status = source["status"];
+	        this.created_by = source["created_by"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.approved_by = source["approved_by"];
+	        this.approved_at = this.convertValues(source["approved_at"], null);
+	        this.locked_at = this.convertValues(source["locked_at"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class Entry {
+	    id: number;
+	    batch_id: number;
+	    employee_id: number;
+	    employee_name: string;
+	    base_salary: number;
+	    allowances_total: number;
+	    deductions_total: number;
+	    tax_total: number;
+	    gross_pay: number;
+	    net_pay: number;
+	    // Go type: time
+	    created_at: any;
+	    // Go type: time
+	    updated_at: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Entry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.batch_id = source["batch_id"];
+	        this.employee_id = source["employee_id"];
+	        this.employee_name = source["employee_name"];
+	        this.base_salary = source["base_salary"];
+	        this.allowances_total = source["allowances_total"];
+	        this.deductions_total = source["deductions_total"];
+	        this.tax_total = source["tax_total"];
+	        this.gross_pay = source["gross_pay"];
+	        this.net_pay = source["net_pay"];
+	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.updated_at = this.convertValues(source["updated_at"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class BatchDetail {
+	    batch: Batch;
+	    entries: Entry[];
+	
+	    static createFrom(source: any = {}) {
+	        return new BatchDetail(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.batch = this.convertValues(source["batch"], Batch);
+	        this.entries = this.convertValues(source["entries"], Entry);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class BatchFilter {
+	    month: string;
+	    status: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new BatchFilter(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.month = source["month"];
+	        this.status = source["status"];
+	    }
+	}
+	export class BatchListResult {
+	    items: Batch[];
+	
+	    static createFrom(source: any = {}) {
+	        return new BatchListResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.items = this.convertValues(source["items"], Batch);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class CreateBatchInput {
+	    month: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CreateBatchInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.month = source["month"];
+	    }
+	}
+	
+	export class UpdateEntryAmountsInput {
+	    allowances_total: number;
+	    deductions_total: number;
+	    tax_total: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateEntryAmountsInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.allowances_total = source["allowances_total"];
+	        this.deductions_total = source["deductions_total"];
+	        this.tax_total = source["tax_total"];
+	    }
+	}
 
 }
 

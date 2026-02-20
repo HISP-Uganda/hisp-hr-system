@@ -14,6 +14,10 @@ export function ApproveLeave(arg1, arg2, arg3) {
   return window['go']['main']['App']['ApproveLeave'](arg1, arg2, arg3);
 }
 
+export function ApprovePayrollBatch(arg1, arg2) {
+  return window['go']['main']['App']['ApprovePayrollBatch'](arg1, arg2);
+}
+
 export function CancelLeave(arg1, arg2, arg3) {
   return window['go']['main']['App']['CancelLeave'](arg1, arg2, arg3);
 }
@@ -30,6 +34,10 @@ export function CreateLeaveType(arg1, arg2) {
   return window['go']['main']['App']['CreateLeaveType'](arg1, arg2);
 }
 
+export function CreatePayrollBatch(arg1, arg2) {
+  return window['go']['main']['App']['CreatePayrollBatch'](arg1, arg2);
+}
+
 export function DeactivateLeaveType(arg1, arg2) {
   return window['go']['main']['App']['DeactivateLeaveType'](arg1, arg2);
 }
@@ -38,8 +46,20 @@ export function DeleteEmployee(arg1, arg2) {
   return window['go']['main']['App']['DeleteEmployee'](arg1, arg2);
 }
 
+export function ExportPayrollBatchCSV(arg1, arg2) {
+  return window['go']['main']['App']['ExportPayrollBatchCSV'](arg1, arg2);
+}
+
+export function GeneratePayrollEntries(arg1, arg2) {
+  return window['go']['main']['App']['GeneratePayrollEntries'](arg1, arg2);
+}
+
 export function GetEmployee(arg1, arg2) {
   return window['go']['main']['App']['GetEmployee'](arg1, arg2);
+}
+
+export function GetPayrollBatch(arg1, arg2) {
+  return window['go']['main']['App']['GetPayrollBatch'](arg1, arg2);
 }
 
 export function Greet(arg1) {
@@ -66,8 +86,16 @@ export function ListLockedLeaveDates(arg1, arg2) {
   return window['go']['main']['App']['ListLockedLeaveDates'](arg1, arg2);
 }
 
+export function ListPayrollBatches(arg1, arg2) {
+  return window['go']['main']['App']['ListPayrollBatches'](arg1, arg2);
+}
+
 export function LockLeaveDate(arg1, arg2) {
   return window['go']['main']['App']['LockLeaveDate'](arg1, arg2);
+}
+
+export function LockPayrollBatch(arg1, arg2) {
+  return window['go']['main']['App']['LockPayrollBatch'](arg1, arg2);
 }
 
 export function Login(arg1, arg2) {
@@ -112,4 +140,8 @@ export function UpdateEmployee(arg1, arg2, arg3) {
 
 export function UpdateLeaveType(arg1, arg2, arg3) {
   return window['go']['main']['App']['UpdateLeaveType'](arg1, arg2, arg3);
+}
+
+export function UpdatePayrollEntryAmounts(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UpdatePayrollEntryAmounts'](arg1, arg2, arg3);
 }
