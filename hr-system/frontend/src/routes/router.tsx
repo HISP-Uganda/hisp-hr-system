@@ -10,6 +10,7 @@ import { PayrollBatchesPage } from "../modules/payroll/PayrollBatchesPage";
 import { PayrollBatchDetailPage } from "../modules/payroll/PayrollBatchDetailPage";
 import { UsersPage } from "../modules/users/UsersPage";
 import { UserRole, hasRole } from "./access";
+import {DashboardPage} from "../components/DashboardPage";
 
 type RouterContext = {
   auth: AuthContextValue;
@@ -59,8 +60,7 @@ const shellRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: "/dashboard",
-  component: AppShell,
-  // component: () => <SectionPage title="Dashboard" description="Overview and high-level HR metrics will be displayed here." />,
+  component: DashboardPage,
 });
 
 const dashboardTypoRoute = createRoute({
